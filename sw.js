@@ -1,6 +1,5 @@
-const CACHE_NAME = 'face-pong-v1';
+const CACHE_NAME = 'face-pong-v2';
 const ASSETS = [
-  './',
   './index.html',
   './manifest.json',
   './face.png',
@@ -11,7 +10,15 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (e) {
+          console.warn('Cache add skipped for:', asset, e);
+        }
+      }
+    })
   );
   self.skipWaiting();
 });
@@ -30,7 +37,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
+      return cached || fetch(event.request).catch(() => {
+        return caches.match('./index.html');
+      });
     })
   );
 });

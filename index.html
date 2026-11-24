@@ -37,14 +37,14 @@
       max-width: 177.78vh; /* 16:9 ratio */
       max-height: 56.25vw;
       background: #0a0c16;
-      box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 50px rgba(0, 240, 255, 0.25);
     }
     canvas {
       width: 100%;
       height: 100%;
       display: block;
     }
-    /* Сенсорный интерфейс настроек вверху/внизу */
+    /* Сенсорный интерфейс настроек */
     .touch-ui {
       position: absolute;
       bottom: 8px;
@@ -53,16 +53,18 @@
       display: flex;
       gap: 6px;
       align-items: center;
-      background: rgba(14, 18, 30, 0.85);
+      background: rgba(14, 18, 30, 0.9);
       padding: 6px 12px;
       border-radius: 20px;
-      border: 1px solid rgba(0, 240, 255, 0.3);
+      border: 1px solid rgba(0, 240, 255, 0.4);
       z-index: 10;
       max-width: 96%;
       overflow-x: auto;
+      scrollbar-width: none;
     }
+    .touch-ui::-webkit-scrollbar { display: none; }
     .btn {
-      background: rgba(30, 40, 65, 0.8);
+      background: rgba(30, 40, 65, 0.85);
       color: #fff;
       border: 1px solid #00f0ff;
       border-radius: 12px;
@@ -88,6 +90,11 @@
       color: #fff;
       box-shadow: 0 0 15px #b446ff;
     }
+    .btn-event {
+      border-color: #ffd700;
+      color: #ffd700;
+      background: rgba(60, 45, 10, 0.8);
+    }
     .rally-control {
       display: flex;
       align-items: center;
@@ -96,14 +103,13 @@
       font-size: 12px;
       font-family: Arial, sans-serif;
       font-weight: bold;
-      padding: 0 6px;
+      padding: 0 4px;
     }
     .btn-sm {
       padding: 3px 8px;
       font-size: 14px;
       border-radius: 8px;
     }
-    /* Подсказка для добавления на рабочий стол */
     #install-banner {
       position: absolute;
       top: 10px;
@@ -128,7 +134,7 @@
     <div id="install-banner">📱 Нажмите сюда, чтобы добавить Face Pong на рабочий стол!</div>
     <canvas id="canvas" width="1920" height="1080"></canvas>
 
-    <!-- Мобильные кнопки переключения сложности и старта ралли прямо на экране -->
+    <!-- Сенсорные кнопки -->
     <div class="touch-ui">
       <div class="rally-control">
         <span>СТАРТ:</span>
@@ -141,17 +147,20 @@
       <button class="btn" id="btn-hard">Сложный</button>
       <button class="btn" id="btn-expert">Эксперт</button>
       <button class="btn btn-god" id="btn-god">⚡ БОГ (Беск.)</button>
+      <button class="btn btn-event" id="btn-trigger-event">🎲 ИВЕНТ</button>
       <button class="btn" id="btn-fs" style="border-color: #ffd700; color: #ffd700;">⛶</button>
     </div>
   </div>
 
   <script>
-    // Регистрация Service Worker для PWA
+    // Регистрация Service Worker (с безопасным отказоустойчивым кешированием)
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(console.error);
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.warn);
+      });
     }
 
-    // Обработка баннера установки на рабочий стол
+    // Баннер установки на домашний экран
     let deferredPrompt;
     const installBanner = document.getElementById('install-banner');
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -169,7 +178,7 @@
     });
 
     // -------------------------------------------------------------
-    // ПРОЦЕДУРНЫЙ ЗВУКОВОЙ ДВИЖОК (WEB AUDIO API)
+    // ЗВУКОВОЙ ДВИЖОК: ИВЕНТЫ, ПЕСНЯ ВЕРИТИ, МЕМ 67, КРОЛИКИ
     // -------------------------------------------------------------
     class WebSoundEngine {
       constructor() {
@@ -192,7 +201,7 @@
         const gain = this.ctx.createGain();
         osc.type = 'square';
         osc.frequency.setValueAtTime(587.33, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -205,7 +214,7 @@
         const gain = this.ctx.createGain();
         osc.type = 'square';
         osc.frequency.setValueAtTime(440.0, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -217,8 +226,8 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(170, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.07);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -231,8 +240,8 @@
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(90, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(28, this.ctx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -245,14 +254,82 @@
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1600, this.ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(350, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1600, this.ctx.currentTime + 0.22);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
+        osc.stop(this.ctx.currentTime + 0.22);
+      }
+      playBoing() {
+        // Звук прыжка кролика
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(650, this.ctx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.16);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.16);
+      }
+      playMeme67() {
+        // Мощный бас-дроп 67!
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(38, this.ctx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.5);
+      }
+      playVeritySong() {
+        // Мелодия Верити: "Hey it's me, it's Verity! I'm your entity, I know about everything..."
+        if (!this.ctx) return;
+        const notes = [
+          { f: 392.00, d: 0.26 }, // G4
+          { f: 440.00, d: 0.24 }, // A4
+          { f: 466.16, d: 0.32 }, // Bb4
+          { f: 523.25, d: 0.36 }, // C5
+          { f: 466.16, d: 0.26 }, // Bb4
+          { f: 392.00, d: 0.45 }, // G4
+          { f: 349.23, d: 0.28 }, // F4
+          { f: 392.00, d: 0.55 }  // G4
+        ];
+        let t = this.ctx.currentTime;
+        for (let n of notes) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(n.f, t);
+          // Вибрато
+          const lfo = this.ctx.createOscillator();
+          const lfoGain = this.ctx.createGain();
+          lfo.frequency.value = 5.5;
+          lfoGain.gain.value = 8.0;
+          lfo.connect(lfoGain);
+          lfoGain.connect(osc.frequency);
+          lfo.start(t);
+          lfo.stop(t + n.d);
+
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + n.d);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + n.d);
+          t += n.d;
+        }
       }
       startMusic() {
         if (this.musicPlaying || !this.ctx) return;
@@ -267,7 +344,7 @@
           const gain = this.ctx.createGain();
           osc.type = 'sawtooth';
           osc.frequency.value = bassNotes[step % bassNotes.length];
-          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.035, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + beatSec * 0.8);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
@@ -281,7 +358,7 @@
     const sound = new WebSoundEngine();
 
     // -------------------------------------------------------------
-    // ИГРОВОЙ ДВИЖОК CANVAS (1920x1080)
+    // ИГРОВОЙ ХОЛСТ 1920x1080
     // -------------------------------------------------------------
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -297,11 +374,18 @@
     const BALL_RAD = BALL_BASE_W * 0.42;
     const INITIAL_SPEED = 580;
     const SPEED_MULT = 1.075;
-    const MAX_SPEED = 3400;
 
-    // Загрузка спрайта лица
+    // Загрузка спрайта
     const faceImg = new Image();
     faceImg.src = 'face.png';
+
+    // Фоновые лица: ПО-НАСТОЯЩЕМУ КРУТЯТСЯ И ПЛАВАЮТ
+    const bgFaces = [
+      { x: CW * 0.15, y: 540, rot: 0, rotSpeed: 16, w: 240, h: 420, alpha: 0.08, dx: 15, dy: 10 },
+      { x: CW * 0.38, y: 520, rot: 45, rotSpeed: -20, w: 260, h: 450, alpha: 0.09, dx: -12, dy: 14 },
+      { x: CW * 0.62, y: 560, rot: 90, rotSpeed: 18, w: 250, h: 430, alpha: 0.08, dx: 14, dy: -12 },
+      { x: CW * 0.85, y: 530, rot: 135, rotSpeed: -15, w: 240, h: 420, alpha: 0.08, dx: -15, dy: 10 }
+    ];
 
     let state = 'START';
     let scoreP1 = 0;
@@ -310,11 +394,11 @@
     let startRally = 0;
     let maxRally = 0;
     let maxSpeed = 0;
-    let screenShake = 0;
     let aiDifficulty = 'normal';
 
     const p1 = { x: 70, y: 540, hitFlash: 0 };
     const p2 = { x: CW - 70, y: 540, aiSpeed: 600, hitFlash: 0 };
+
     const ball = {
       x: CW / 2,
       y: CH / 2,
@@ -323,8 +407,6 @@
       speed: INITIAL_SPEED,
       rot: 0,
       rotSpeed: 0,
-      squashX: 1,
-      squashY: 1,
       trail: []
     };
 
@@ -333,17 +415,273 @@
     let aiOffset = 0;
     let countdownTimer = 0;
 
+    // -------------------------------------------------------------
+    // СИСТЕМА РЕДКИХ ИВЕНТОВ
+    // -------------------------------------------------------------
+    class EventManager {
+      constructor() {
+        this.current = null; // 'verity', 'meme67', 'rabbits', 'multiball'
+        this.timer = 0;
+        this.bannerText = '';
+        this.bannerSub = '';
+        this.bannerColor = '#ffd700';
+        this.bannerAlpha = 0;
+        this.nextEventTimer = 50 + Math.random() * 40; // редкий интервал (50-90 сек)
+        this.rabbits = [];
+        this.extraBalls = [];
+      }
+
+      triggerRandom() {
+        const events = ['verity', 'meme67', 'rabbits', 'multiball'];
+        const chosen = events[Math.floor(Math.random() * events.length)];
+        this.start(chosen);
+      }
+
+      start(type) {
+        this.current = type;
+        this.bannerAlpha = 1.0;
+
+        if (type === 'verity') {
+          this.timer = 9.5;
+          this.bannerText = 'ХЕЙ, ЭТО Я... ВЕРИТИ!';
+          this.bannerSub = 'Я ТВОЯ СУЩНОСТЬ... Я ЗНАЮ ОБО ВСЁМ!';
+          this.bannerColor = '#b446ff';
+          sound.playVeritySong();
+        } else if (type === 'meme67') {
+          this.timer = 9.0;
+          this.bannerText = '💥 МЕМ 67 АКТИВИРОВАН! 💥';
+          this.bannerSub = 'ОЧКИ x6.7! БУСТ СКОРОСТИ +670 PX/S!';
+          this.bannerColor = '#ffd700';
+          sound.playMeme67();
+          ball.speed += 670;
+        } else if (type === 'rabbits') {
+          this.timer = 11.0;
+          this.bannerText = '🐰 НАШЕСТВИЕ КРОЛИКОВ-ЛИЦ! 🐰';
+          this.bannerSub = 'ОТБИВАЙТЕ МЯЧ ОТ КРОЛИКОВ ДЛЯ БОНУСА +500!';
+          this.bannerColor = '#ff69b4';
+          sound.playBoing();
+          this.rabbits = [];
+          for (let i = 0; i < 7; i++) {
+            this.rabbits.push({
+              x: 350 + Math.random() * (CW - 700),
+              y: TOP_WALL + 60 + Math.random() * (BOTTOM_WALL - TOP_WALL - 120),
+              vx: (Math.random() - 0.5) * 260,
+              vy: (Math.random() - 0.5) * 260,
+              rot: 0,
+              earsBounce: 0
+            });
+          }
+        } else if (type === 'multiball') {
+          this.timer = 12.0;
+          this.bannerText = '⚡ ТРОЙНОЙ МЯЧ! КЛОНИРОВАНИЕ ЛИЦ! ⚡';
+          this.bannerSub = 'УДЕРЖИТЕ ВСЕ МЯЧИ ОДНОВРЕМЕННО!';
+          this.bannerColor = '#00f0ff';
+          sound.playWhoosh();
+          this.extraBalls = [];
+          for (let ang of [-0.4, 0.4]) {
+            this.extraBalls.push({
+              x: ball.x,
+              y: ball.y,
+              vx: ball.speed * Math.cos(ang) * Math.sign(ball.vx || 1),
+              vy: ball.speed * Math.sin(ang),
+              speed: ball.speed,
+              rot: 0,
+              rotSpeed: 300,
+              trail: []
+            });
+          }
+        }
+      }
+
+      update(dt) {
+        if (state !== 'PLAYING') return;
+
+        // Таймер до следующего редкого ивента
+        if (!this.current) {
+          this.nextEventTimer -= dt;
+          if (this.nextEventTimer <= 0) {
+            this.nextEventTimer = 55 + Math.random() * 45;
+            this.triggerRandom();
+          }
+        }
+
+        if (this.current) {
+          this.timer -= dt;
+          this.bannerAlpha = Math.min(1.0, this.timer);
+
+          // Поведение для Верити (гравитационная волна мяча)
+          if (this.current === 'verity') {
+            ball.vy += Math.sin(ball.x * 0.015 + performance.now() * 0.003) * 480 * dt;
+          }
+
+          // Поведение кроликов
+          if (this.current === 'rabbits') {
+            for (let r of this.rabbits) {
+              r.x += r.vx * dt;
+              r.y += r.vy * dt;
+              r.earsBounce = Math.sin(performance.now() * 0.015) * 8;
+              if (r.x < 250 || r.x > CW - 250) r.vx = -r.vx;
+              if (r.y < TOP_WALL + 40 || r.y > BOTTOM_WALL - 40) r.vy = -r.vy;
+
+              // Столкновение мяча с кроликом
+              const dist = Math.hypot(ball.x - r.x, ball.y - r.y);
+              if (dist < BALL_RAD + 35) {
+                ball.vx = -ball.vx * 1.05;
+                ball.vy = (Math.random() - 0.5) * ball.speed;
+                sound.playBoing();
+                scoreP1 += 500;
+                floatingTexts.push({ x: r.x, y: r.y, text: '+500 КРОЛИК!', col: '#ff69b4', life: 1.2 });
+                // Телепортируем кролика
+                r.x = 350 + Math.random() * (CW - 700);
+                r.y = TOP_WALL + 60 + Math.random() * (BOTTOM_WALL - TOP_WALL - 120);
+              }
+            }
+          }
+
+          // Поведение мульти-мяча
+          if (this.current === 'multiball') {
+            for (let eb of this.extraBalls) {
+              eb.x += eb.vx * dt;
+              eb.y += eb.vy * dt;
+              eb.rot += eb.rotSpeed * dt;
+              if (eb.y - BALL_RAD <= TOP_WALL && eb.vy < 0) { eb.y = TOP_WALL + BALL_RAD; eb.vy = -eb.vy; }
+              if (eb.y + BALL_RAD >= BOTTOM_WALL && eb.vy > 0) { eb.y = BOTTOM_WALL - BALL_RAD; eb.vy = -eb.vy; }
+
+              // Отскоки от ракеток
+              if (eb.vx < 0 && eb.x <= p1.x + PADDLE_W / 2 + BALL_RAD && eb.x >= p1.x - PADDLE_W / 2) {
+                if (Math.abs(eb.y - p1.y) <= PADDLE_H / 2 + 20) {
+                  eb.vx = Math.abs(eb.vx);
+                  sound.playHitPlayer();
+                }
+              }
+              if (eb.vx > 0 && eb.x >= p2.x - PADDLE_W / 2 - BALL_RAD && eb.x <= p2.x + PADDLE_W / 2) {
+                if (Math.abs(eb.y - p2.y) <= PADDLE_H / 2 + 20) {
+                  eb.vx = -Math.abs(eb.vx);
+                  sound.playHitAi();
+                }
+              }
+            }
+          }
+
+          if (this.timer <= 0) {
+            this.current = null;
+            this.rabbits = [];
+            this.extraBalls = [];
+          }
+        }
+      }
+
+      draw() {
+        if (!this.current) return;
+
+        // Баннер ивента сверху
+        if (this.bannerAlpha > 0) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(1.0, this.bannerAlpha);
+          ctx.fillStyle = 'rgba(10, 15, 28, 0.9)';
+          ctx.fillRect(CW / 2 - 450, 95, 900, 65);
+          ctx.strokeStyle = this.bannerColor;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(CW / 2 - 450, 95, 900, 65);
+
+          ctx.font = '28px Impact';
+          ctx.fillStyle = this.bannerColor;
+          ctx.textAlign = 'center';
+          ctx.fillText(this.bannerText, CW / 2, 126);
+
+          ctx.font = 'bold 15px Arial';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(this.bannerSub, CW / 2, 150);
+          ctx.restore();
+        }
+
+        // Отрисовка сущности Верити
+        if (this.current === 'verity') {
+          ctx.save();
+          const t = performance.now() * 0.002;
+          ctx.globalAlpha = 0.12 + 0.06 * Math.sin(t * 3);
+          if (faceImg.complete) {
+            ctx.drawImage(faceImg, CW / 2 - 170, CH / 2 - 280, 340, 560);
+          }
+          // Неоновые линии помех
+          ctx.strokeStyle = 'rgba(180, 70, 255, 0.25)';
+          ctx.lineWidth = 2;
+          for (let y = TOP_WALL; y < BOTTOM_WALL; y += 45) {
+            ctx.beginPath();
+            ctx.moveTo(0, y + Math.sin(t + y) * 8);
+            ctx.lineTo(CW, y + Math.sin(t + y) * 8);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // Отрисовка Мем 67
+        if (this.current === 'meme67') {
+          ctx.save();
+          ctx.font = '160px Impact';
+          ctx.fillStyle = 'rgba(255, 215, 0, 0.18)';
+          ctx.textAlign = 'center';
+          ctx.fillText('67', CW / 2, CH / 2 + 55);
+          ctx.restore();
+        }
+
+        // Отрисовка Кроликов-лиц
+        if (this.current === 'rabbits') {
+          for (let r of this.rabbits) {
+            ctx.save();
+            ctx.translate(r.x, r.y);
+            // Ушки кролика
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ff69b4';
+            ctx.lineWidth = 2;
+            // Левое ухо
+            ctx.beginPath();
+            ctx.ellipse(-12, -26 + r.earsBounce * 0.3, 7, 20, -0.15, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+            // Правое ухо
+            ctx.beginPath();
+            ctx.ellipse(12, -26 - r.earsBounce * 0.3, 7, 20, 0.15, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+            // Мордочка кролика-лица
+            if (faceImg.complete) {
+              ctx.drawImage(faceImg, -18, -25, 36, 50);
+            }
+            ctx.restore();
+          }
+        }
+
+        // Отрисовка Мульти-мяча
+        if (this.current === 'multiball') {
+          for (let eb of this.extraBalls) {
+            ctx.save();
+            ctx.translate(eb.x, eb.y);
+            ctx.rotate(eb.rot * Math.PI / 180);
+            if (faceImg.complete) {
+              ctx.drawImage(faceImg, -BALL_BASE_W / 2, -BALL_BASE_H / 2, BALL_BASE_W, BALL_BASE_H);
+            }
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, BALL_RAD, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+    }
+
+    const eventMgr = new EventManager();
+
     function resetBall(direction = 1) {
       ball.x = CW / 2;
       ball.y = TOP_WALL + 150 + Math.random() * (BOTTOM_WALL - TOP_WALL - 300);
-      ball.speed = Math.min(MAX_SPEED, INITIAL_SPEED * Math.pow(SPEED_MULT, startRally));
+      // Расчет стартовой скорости по формуле
+      ball.speed = INITIAL_SPEED * Math.pow(SPEED_MULT, startRally);
       const ang = (Math.random() - 0.5) * 0.7;
       ball.vx = direction * ball.speed * Math.cos(ang);
       ball.vy = ball.speed * Math.sin(ang);
       ball.rot = 0;
       ball.rotSpeed = 0;
-      ball.squashX = 1;
-      ball.squashY = 1;
       ball.trail = [];
       rallyCount = startRally;
     }
@@ -365,7 +703,7 @@
     }
 
     // -------------------------------------------------------------
-    // СЕНСОРНОЕ УПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНА
+    // СЕНСОРНОЕ УПРАВЛЕНИЕ
     // -------------------------------------------------------------
     function handleTouchMove(e) {
       sound.init();
@@ -388,7 +726,6 @@
       handleTouchMove(e);
     }, { passive: false });
 
-    // Управление мышью (для ПК в браузере)
     window.addEventListener('mousemove', (e) => {
       if (state !== 'PLAYING') return;
       const rect = canvas.getBoundingClientRect();
@@ -397,6 +734,7 @@
       const halfH = PADDLE_H / 2;
       p1.y = Math.max(TOP_WALL + halfH, Math.min(BOTTOM_WALL - halfH, clientY));
     });
+
     window.addEventListener('click', () => {
       sound.init();
       if (state === 'START' || state === 'GAMEOVER') {
@@ -408,44 +746,26 @@
     // Кнопки интерфейса
     function setActiveDiffBtn(id) {
       document.querySelectorAll('.touch-ui .btn').forEach(b => {
-        if (b.id !== 'btn-rally-minus' && b.id !== 'btn-rally-plus' && b.id !== 'btn-fs') {
+        if (!['btn-rally-minus', 'btn-rally-plus', 'btn-fs', 'btn-trigger-event'].includes(b.id)) {
           b.classList.remove('active');
         }
       });
       document.getElementById(id).classList.add('active');
     }
 
-    document.getElementById('btn-easy').onclick = (e) => {
-      e.stopPropagation();
-      sound.init();
-      aiDifficulty = 'easy';
-      setActiveDiffBtn('btn-easy');
-    };
-    document.getElementById('btn-normal').onclick = (e) => {
-      e.stopPropagation();
-      sound.init();
-      aiDifficulty = 'normal';
-      setActiveDiffBtn('btn-normal');
-    };
-    document.getElementById('btn-hard').onclick = (e) => {
-      e.stopPropagation();
-      sound.init();
-      aiDifficulty = 'hard';
-      setActiveDiffBtn('btn-hard');
-    };
-    document.getElementById('btn-expert').onclick = (e) => {
-      e.stopPropagation();
-      sound.init();
-      aiDifficulty = 'expert';
-      setActiveDiffBtn('btn-expert');
-    };
+    document.getElementById('btn-easy').onclick = (e) => { e.stopPropagation(); sound.init(); aiDifficulty = 'easy'; setActiveDiffBtn('btn-easy'); };
+    document.getElementById('btn-normal').onclick = (e) => { e.stopPropagation(); sound.init(); aiDifficulty = 'normal'; setActiveDiffBtn('btn-normal'); };
+    document.getElementById('btn-hard').onclick = (e) => { e.stopPropagation(); sound.init(); aiDifficulty = 'hard'; setActiveDiffBtn('btn-hard'); };
+    document.getElementById('btn-expert').onclick = (e) => { e.stopPropagation(); sound.init(); aiDifficulty = 'expert'; setActiveDiffBtn('btn-expert'); };
     document.getElementById('btn-god').onclick = (e) => {
+      e.stopPropagation(); sound.init(); aiDifficulty = 'god'; setActiveDiffBtn('btn-god'); sound.playWhoosh();
+    };
+
+    // Кнопка принудительного запуска ивента
+    document.getElementById('btn-trigger-event').onclick = (e) => {
       e.stopPropagation();
       sound.init();
-      aiDifficulty = 'god';
-      setActiveDiffBtn('btn-god');
-      screenShake = 16;
-      sound.playWhoosh();
+      eventMgr.triggerRandom();
     };
 
     const txtRally = document.getElementById('txt-start-rally');
@@ -459,10 +779,11 @@
     document.getElementById('btn-rally-plus').onclick = (e) => {
       e.stopPropagation();
       sound.init();
-      startRally = Math.min(25, startRally + 5);
+      startRally = Math.min(30, startRally + 5);
       txtRally.innerText = startRally;
       if (state === 'PLAYING') resetBall(Math.sign(ball.vx) || 1);
     };
+
     document.getElementById('btn-fs').onclick = (e) => {
       e.stopPropagation();
       if (!document.fullscreenElement) {
@@ -473,7 +794,7 @@
     };
 
     // -------------------------------------------------------------
-    // ФИЗИКА И ОБНОВЛЕНИЕ
+    // ГЛАВНЫЙ ЦИКЛ ОБНОВЛЕНИЯ (БЕЗ ТРЯСКИ ЭКРАНА)
     // -------------------------------------------------------------
     let lastTime = performance.now();
 
@@ -482,9 +803,21 @@
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
-      if (screenShake > 0) screenShake = Math.max(0, screenShake - dt * 25);
+      // 1. ВРАЩЕНИЕ И ДРЕЙФ ФОНОВЫХ ЛИЦ
+      for (let bf of bgFaces) {
+        bf.rot += bf.rotSpeed * dt;
+        bf.x += bf.dx * dt;
+        bf.y += bf.dy * dt;
+        if (bf.x < -160) bf.x = CW + 160;
+        if (bf.x > CW + 160) bf.x = -160;
+        if (bf.y < TOP_WALL - 50) bf.y = BOTTOM_WALL + 50;
+        if (bf.y > BOTTOM_WALL + 50) bf.y = TOP_WALL - 50;
+      }
 
-      // Обновление частиц
+      // 2. ИВЕНТЫ
+      eventMgr.update(dt);
+
+      // Частицы
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -493,6 +826,14 @@
         p.rot += p.rotSpeed * dt;
         p.life -= p.decay * dt;
         if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Всплывающий текст
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.y -= 50 * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
       }
 
       if (state === 'POINT_SCORED') {
@@ -504,7 +845,7 @@
         // ОБНОВЛЕНИЕ БОТА
         const midY = (TOP_WALL + BOTTOM_WALL) / 2;
         if (aiDifficulty === 'god') {
-          // РЕЖИМ БОГА: Бесконечная скорость
+          // БЕСКОНЕЧНАЯ СКОРОСТЬ: бот мгновенно на высоте мяча
           p2.aiSpeed = 999999;
           p2.y = ball.y;
         } else {
@@ -515,7 +856,6 @@
           else if (aiDifficulty === 'expert') { p2.aiSpeed = 1250; reactX = 0.12; }
 
           if (ball.vx < 0) {
-            // Мяч летит к игроку: возврат к центру
             const diff = midY - p2.y;
             p2.y += Math.sign(diff) * Math.min(Math.abs(diff), 280 * dt);
           } else {
@@ -529,14 +869,15 @@
         const halfH = PADDLE_H / 2;
         p2.y = Math.max(TOP_WALL + halfH, Math.min(BOTTOM_WALL - halfH, p2.y));
 
-        // НЕПРЕРЫВНАЯ ФИЗИКА МЯЧА (SUB-STEPPING)
-        ball.speed = Math.min(MAX_SPEED, ball.speed + 12 * dt);
+        // БЕСКОНЕЧНЫЙ РОСТ СКОРОСТИ МЯЧА (БЕЗ ОГРАНИЧЕНИЙ)
+        ball.speed += 14 * dt;
         const norm = Math.hypot(ball.vx, ball.vy) || 1;
         ball.vx = (ball.vx / norm) * ball.speed;
         ball.vy = (ball.vy / norm) * ball.speed;
 
         if (ball.speed > maxSpeed) maxSpeed = Math.floor(ball.speed);
 
+        // НЕПРЕРЫВНАЯ ФИЗИКА (SUB-STEPPING С ШАГОМ <= 6px ДЛЯ 0% ПРОЛЁТОВ)
         const stepSize = 6.0;
         const totalDist = ball.speed * dt;
         const numSteps = Math.max(3, Math.ceil(totalDist / stepSize));
@@ -557,12 +898,10 @@
             ball.y = TOP_WALL + BALL_RAD;
             ball.vy = Math.abs(ball.vy);
             sound.playWall();
-            screenShake = Math.max(screenShake, 3);
           } else if (ball.y + BALL_RAD >= BOTTOM_WALL && ball.vy > 0) {
             ball.y = BOTTOM_WALL - BALL_RAD;
             ball.vy = -Math.abs(ball.vy);
             sound.playWall();
-            screenShake = Math.max(screenShake, 3);
           }
 
           // Ракетка 1 (Игрок)
@@ -600,7 +939,7 @@
           }
         }
 
-        // Шлейф и анимация
+        // Шлейф
         ball.rot += ball.rotSpeed * dt;
         ball.rotSpeed *= 0.98;
         ball.trail.push({ x: ball.x, y: ball.y, rot: ball.rot, alpha: 0.7 });
@@ -613,7 +952,8 @@
     }
 
     function handleBounce(paddle, isPlayer) {
-      ball.speed = Math.min(MAX_SPEED, ball.speed * SPEED_MULT);
+      // Экспоненциальное ускорение БЕЗ ПОТОЛКА!
+      ball.speed *= SPEED_MULT;
       rallyCount++;
       if (rallyCount > maxRally) maxRally = rallyCount;
 
@@ -629,18 +969,16 @@
         sound.playHitPlayer();
         if (navigator.vibrate) navigator.vibrate(18);
         if (aiDifficulty === 'god') aiOffset = 0;
-        else if (aiDifficulty === 'expert') aiOffset = (Math.random() - 0.5) * 20;
-        else if (aiDifficulty === 'hard') aiOffset = (Math.random() - 0.5) * 45;
-        else aiOffset = (Math.random() - 0.5) * 80;
+        else if (aiDifficulty === 'expert') aiOffset = (Math.random() - 0.5) * 18;
+        else if (aiDifficulty === 'hard') aiOffset = (Math.random() - 0.5) * 40;
+        else aiOffset = (Math.random() - 0.5) * 75;
       } else {
         sound.playHitAi();
       }
-      screenShake = Math.max(screenShake, 5 + ball.speed / 400);
     }
 
     function handleGoal(scorer) {
       sound.playGoal();
-      screenShake = 22;
       rallyCount = startRally;
 
       const gx = scorer === 1 ? CW : 0;
@@ -658,8 +996,9 @@
         });
       }
 
-      if (scorer === 1) scoreP1++;
-      else scoreP2++;
+      const pts = eventMgr.current === 'meme67' ? 7 : 1;
+      if (scorer === 1) scoreP1 += pts;
+      else scoreP2 += pts;
 
       if (scoreP1 >= 11 || scoreP2 >= 11) {
         state = 'GAMEOVER';
@@ -669,30 +1008,29 @@
     }
 
     // -------------------------------------------------------------
-    // ОТРИСОВКА (CANVAS 1920x1080)
+    // ОТРИСОВКА (БЕЗ ТРЯСКИ ЭКРАНА)
     // -------------------------------------------------------------
     function draw() {
-      ctx.save();
-      if (screenShake > 0) {
-        const ox = (Math.random() - 0.5) * screenShake * 2;
-        const oy = (Math.random() - 0.5) * screenShake * 2;
-        ctx.translate(ox, oy);
-      }
-
-      // Фон
+      // Фон (полностью стабильный, без тряски)
       ctx.fillStyle = '#0a0c16';
       ctx.fillRect(0, 0, CW, CH);
 
-      // Фоновые гигантские лица
-      ctx.globalAlpha = 0.08;
-      if (faceImg.complete) {
-        for (let i = 0; i < 4; i++) {
-          ctx.drawImage(faceImg, 220 + i * 440 - 120, CH / 2 - 210, 240, 420);
+      // 1. ФОНОВЫЕ ЛИЦА (КРУТЯТСЯ И ПЛАВАЮТ)
+      for (let bf of bgFaces) {
+        ctx.save();
+        ctx.globalAlpha = bf.alpha;
+        ctx.translate(bf.x, bf.y);
+        ctx.rotate(bf.rot * Math.PI / 180);
+        if (faceImg.complete) {
+          ctx.drawImage(faceImg, -bf.w / 2, -bf.h / 2, bf.w, bf.h);
         }
+        ctx.restore();
       }
-      ctx.globalAlpha = 1.0;
 
-      // Трибуны зрителей-лиц
+      // 2. ИВЕНТЫ (Верити, Кролики, Мем 67)
+      eventMgr.draw();
+
+      // 3. ТРИБУНЫ ЗРИТЕЛЕЙ
       const time = performance.now() / 200;
       const numSpec = 34;
       for (let i = 0; i < numSpec; i++) {
@@ -704,7 +1042,7 @@
         }
       }
 
-      // Границы поля
+      // 4. ГРАНИЦЫ ПОЛЯ
       ctx.strokeStyle = '#3c5078';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -714,7 +1052,7 @@
       ctx.lineTo(CW, BOTTOM_WALL);
       ctx.stroke();
 
-      // Сетка по центру
+      // 5. ЦЕНТРАЛЬНАЯ СЕТКА
       for (let i = 0; i < 16; i++) {
         const ny = TOP_WALL + 30 + i * ((BOTTOM_WALL - TOP_WALL - 60) / 15);
         if (faceImg.complete) {
@@ -722,7 +1060,7 @@
         }
       }
 
-      // РАКЕТКА 1 (Игрок - Голубая)
+      // 6. РАКЕТКА 1 (Игрок)
       ctx.save();
       ctx.strokeStyle = '#00f0ff';
       ctx.lineWidth = 4;
@@ -734,11 +1072,12 @@
       }
       ctx.restore();
 
-      // РАКЕТКА 2 (Бот - Красная / Аура Бога)
+      // 7. РАКЕТКА 2 (Бот / Аура Бога)
       ctx.save();
       if (aiDifficulty === 'god') {
-        ctx.fillStyle = 'rgba(180, 70, 255, 0.4)';
-        ctx.fillRect(p2.x - PADDLE_W / 2 - 8, p2.y - PADDLE_H / 2 - 8, PADDLE_W + 16, PADDLE_H + 16);
+        const tNow = performance.now() * 0.005;
+        ctx.fillStyle = `rgba(180, 70, 255, ${0.4 + 0.2 * Math.sin(tNow)})`;
+        ctx.fillRect(p2.x - PADDLE_W / 2 - 10, p2.y - PADDLE_H / 2 - 10, PADDLE_W + 20, PADDLE_H + 20);
       }
       ctx.strokeStyle = aiDifficulty === 'god' ? '#b446ff' : '#ff3c5a';
       ctx.lineWidth = 4;
@@ -750,11 +1089,11 @@
       }
       ctx.restore();
 
-      // МЯЧ И ШЛЕЙФ
+      // 8. МЯЧ И ШЛЕЙФ
       if (state === 'PLAYING' || state === 'POINT_SCORED') {
         for (let t of ball.trail) {
           ctx.save();
-          ctx.globalAlpha = t.alpha * 0.5;
+          ctx.globalAlpha = t.alpha * 0.55;
           ctx.translate(t.x, t.y);
           ctx.rotate(t.rot * Math.PI / 180);
           if (faceImg.complete) ctx.drawImage(faceImg, -BALL_BASE_W / 2, -BALL_BASE_H / 2, BALL_BASE_W, BALL_BASE_H);
@@ -767,7 +1106,21 @@
         if (faceImg.complete) {
           ctx.drawImage(faceImg, -BALL_BASE_W / 2, -BALL_BASE_H / 2, BALL_BASE_W, BALL_BASE_H);
         }
-        if (ball.speed >= 1400) {
+
+        // Цветовые кольца ауры при бесконечно растущей скорости
+        if (ball.speed >= 4500) {
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(0, 0, BALL_RAD + 8, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (ball.speed >= 2500) {
+          ctx.strokeStyle = '#b446ff';
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.arc(0, 0, BALL_RAD + 7, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (ball.speed >= 1400) {
           ctx.strokeStyle = '#ff3c5a';
           ctx.lineWidth = 6;
           ctx.beginPath();
@@ -787,8 +1140,18 @@
         ctx.restore();
       }
 
-      // ВЕРХНЕЕ ТАБЛО
-      ctx.fillStyle = 'rgba(14, 18, 30, 0.9)';
+      // Всплывающие тексты
+      for (let ft of floatingTexts) {
+        ctx.save();
+        ctx.font = '32px Impact';
+        ctx.fillStyle = ft.col;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+
+      // 9. ВЕРХНЕЕ ТАБЛО
+      ctx.fillStyle = 'rgba(14, 18, 30, 0.92)';
       ctx.fillRect(0, 0, CW, 80);
 
       ctx.font = '84px Impact';
@@ -798,10 +1161,18 @@
       ctx.fillStyle = '#ff3c5a';
       ctx.fillText(scoreP2, CW / 2 + 180, 68);
 
+      // Индикатор скорости (БЕЗ ОГРАНИЧЕНИЯ)
+      let tierColor = '#ffffff';
+      let tierName = '';
+      if (ball.speed >= 6000) { tierColor = '#00f0ff'; tierName = ' [СИНГУЛЯРНОСТЬ!]'; }
+      else if (ball.speed >= 4000) { tierColor = '#b446ff'; tierName = ' [СКОРОСТЬ СВЕТА!]'; }
+      else if (ball.speed >= 2500) { tierColor = '#ff3c5a'; tierName = ' [ГИПЕР-ЛИЦО!]'; }
+      else if (ball.speed >= 1400) { tierColor = '#ffd700'; tierName = ' [СВЕРХЗВУК!]'; }
+
       ctx.font = '28px Impact';
-      ctx.fillStyle = ball.speed >= 1400 ? '#ff3c5a' : (ball.speed >= 900 ? '#ffd700' : '#ffffff');
+      ctx.fillStyle = tierColor;
       ctx.textAlign = 'center';
-      ctx.fillText(`СКОРОСТЬ: ${Math.floor(ball.speed)} PX/S`, CW / 2, 34);
+      ctx.fillText(`СКОРОСТЬ: ${Math.floor(ball.speed)} PX/S${tierName}`, CW / 2, 34);
 
       ctx.font = 'bold 18px Arial';
       ctx.fillStyle = '#a0b4d2';
@@ -816,12 +1187,12 @@
         ctx.fillText('FACE PONG: МОБИЛЬНАЯ ВЕРСИЯ', CW / 2, 280);
         ctx.font = '36px Impact';
         ctx.fillStyle = '#00f0ff';
-        ctx.fillText('С КАЖДЫМ УДАРОМ ВСЁ БЫСТРЕЕ!', CW / 2, 350);
+        ctx.fillText('СКОРОСТЬ РАСТЁТ БЕСКОНЕЧНО!', CW / 2, 350);
         ctx.fillStyle = '#ffffff';
         ctx.fillText('👆 КОСНИТЕСЬ ЭКРАНА ДЛЯ СТАРТА', CW / 2, CH - 220);
         ctx.font = 'bold 22px Arial';
         ctx.fillStyle = '#a0b4d2';
-        ctx.fillText('Ведите пальцем по экрану, чтобы отбивать мяч!', CW / 2, CH - 160);
+        ctx.fillText('Ведите пальцем по левой стороне экрана!', CW / 2, CH - 160);
       } else if (state === 'GAMEOVER') {
         ctx.fillStyle = 'rgba(5, 8, 16, 0.9)';
         ctx.fillRect(0, 0, CW, CH);
@@ -834,8 +1205,6 @@
         ctx.fillStyle = '#32ff78';
         ctx.fillText('👆 КОСНИТЕСЬ ДЛЯ РЕВАНША', CW / 2, CH / 2 + 90);
       }
-
-      ctx.restore();
     }
 
     requestAnimationFrame(update);
